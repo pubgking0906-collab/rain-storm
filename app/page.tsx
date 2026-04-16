@@ -1,0 +1,293 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { Header } from '@/components/layout/Header';
+import { Button } from '@/components/ui/Button';
+import { MarketCard } from '@/components/market/MarketCard';
+import { fetchMarketsFromApi } from '@/lib/data/marketApi';
+import { Market } from '@/types/market';
+
+export default function HomePage() {
+  const [featuredMarkets, setFeaturedMarkets] = useState<Market[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetchMarketsFromApi(6)
+      .then((markets) => {
+        if (isMounted) setFeaturedMarkets(markets.slice(0, 6));
+      })
+      .catch(() => {
+        if (isMounted) setFeaturedMarkets([]);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-background-page">
+      <Header />
+
+      {/* Hero Section */}
+      <section className="relative overflow-hidden px-5 pb-20 pt-16 sm:px-8 md:px-10 md:pb-24 md:pt-20">
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-primary/10 via-primary/5 to-transparent" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(75%_55%_at_18%_18%,rgba(123,115,255,0.25),transparent_70%),radial-gradient(55%_40%_at_82%_28%,rgba(22,199,132,0.08),transparent_70%)]" />
+
+        <div className="relative mx-auto w-full max-w-[1280px]">
+          <div className="grid items-start gap-12 lg:grid-cols-[minmax(0,1fr),360px] lg:gap-10">
+            <div className="rounded-3xl border border-border bg-background-card/55 p-7 shadow-xl backdrop-blur md:p-10">
+              <span className="inline-flex items-center rounded-full border border-primary/35 bg-primary/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.22em] text-primary">
+                Rain Protocol Powered
+              </span>
+              <h1 className="mt-7 max-w-3xl text-4xl font-bold leading-[1.05] text-white sm:text-5xl md:text-6xl lg:text-[68px]">
+                Turn Predictions
+                <br />
+                Into Profits
+              </h1>
+
+              <p className="mt-7 max-w-2xl text-base leading-relaxed text-text-secondary sm:text-lg md:text-xl">
+                The blockchain-native prediction market where it pays to be right. Trade on outcomes from crypto to sports, powered by Rain Protocol.
+              </p>
+
+              <div className="mt-9 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+                <Link href="/markets">
+                  <Button size="lg" className="min-w-[200px]">
+                    Start Trading
+                  </Button>
+                </Link>
+                <Link href="/about">
+                  <Button size="lg" variant="outline" className="min-w-[200px] border-primary/35 bg-background-elevated/35 hover:border-primary/55">
+                    Learn How It Works
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+              <div className="rounded-2xl border border-border bg-background-card/85 p-6">
+                <p className="text-sm uppercase tracking-[0.2em] text-text-tertiary">Total Volume</p>
+                <p className="mt-4 text-4xl font-bold text-gradient">$2.5M</p>
+                <p className="mt-2 text-sm text-text-secondary">Flowing through live prediction markets</p>
+              </div>
+              <div className="rounded-2xl border border-border bg-background-card/85 p-6">
+                <p className="text-sm uppercase tracking-[0.2em] text-text-tertiary">Active Traders</p>
+                <p className="mt-4 text-4xl font-bold text-gradient">12.3K</p>
+                <p className="mt-2 text-sm text-text-secondary">Positioning on outcomes in real-time</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Platform Stats */}
+      <section className="bg-background-page-secondary px-5 py-16 sm:px-8 md:px-10 md:py-20">
+        <div className="mx-auto w-full max-w-[1280px]">
+          <h2 className="text-center text-2xl font-bold text-white md:text-3xl">
+            Join thousands of traders earning on their insights
+          </h2>
+
+          <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-2xl border border-border bg-background-card/75 p-6 text-center">
+              <div className="text-3xl font-bold text-gradient md:text-4xl">
+                $2.5M
+              </div>
+              <div className="mt-2 text-sm text-text-secondary">Total Volume</div>
+            </div>
+
+            <div className="rounded-2xl border border-border bg-background-card/75 p-6 text-center">
+              <div className="text-3xl font-bold text-gradient md:text-4xl">
+                234
+              </div>
+              <div className="mt-2 text-sm text-text-secondary">Active Markets</div>
+            </div>
+
+            <div className="rounded-2xl border border-border bg-background-card/75 p-6 text-center">
+              <div className="text-3xl font-bold text-gradient md:text-4xl">
+                12.3K
+              </div>
+              <div className="mt-2 text-sm text-text-secondary">Total Traders</div>
+            </div>
+
+            <div className="rounded-2xl border border-border bg-background-card/75 p-6 text-center">
+              <div className="text-3xl font-bold text-gradient md:text-4xl">
+                1,823
+              </div>
+              <div className="mt-2 text-sm text-text-secondary">Markets Resolved</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Markets */}
+      <section className="px-5 py-16 sm:px-8 md:px-10 md:py-20">
+        <div className="mx-auto w-full max-w-[1280px]">
+          <div className="mb-8 flex items-end justify-between gap-4">
+            <h2 className="text-2xl font-bold text-white md:text-3xl">
+              Featured Markets
+            </h2>
+            <Link href="/markets">
+              <Button variant="ghost" size="sm" className="rounded-full border border-primary/25 bg-primary/5 px-4 text-primary hover:border-primary/40 hover:bg-primary/10 hover:text-primary-hover">
+                View All →
+              </Button>
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {featuredMarkets.map((market) => (
+              <MarketCard key={market.id} market={market} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="bg-background-page-secondary px-5 py-16 sm:px-8 md:px-10 md:py-20">
+        <div className="mx-auto w-full max-w-[1280px]">
+          <h2 className="mb-3 text-center text-2xl font-bold text-white md:text-3xl">
+            How Prediction Markets Work
+          </h2>
+          <p className="mx-auto mb-12 max-w-2xl text-center text-text-secondary">
+            Four simple steps from curiosity to profit. No complex orders, no hidden fees.
+          </p>
+
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+            {/* Step 1 */}
+            <div className="rounded-2xl border border-border bg-background-card/70 p-6 text-center">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-primary text-xl font-bold text-white shadow-glow">
+                1
+              </div>
+              <h3 className="mb-2 text-lg font-semibold text-white">Connect Wallet</h3>
+              <p className="text-sm leading-relaxed text-text-secondary">
+                Link your Web3 wallet in seconds. MetaMask, WalletConnect, or Coinbase Wallet supported.
+              </p>
+            </div>
+
+            {/* Step 2 */}
+            <div className="rounded-2xl border border-border bg-background-card/70 p-6 text-center">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-primary text-xl font-bold text-white shadow-glow">
+                2
+              </div>
+              <h3 className="mb-2 text-lg font-semibold text-white">Browse Markets</h3>
+              <p className="text-sm leading-relaxed text-text-secondary">
+                Explore predictions on crypto, sports, politics, and more. Find markets where your knowledge gives you an edge.
+              </p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="rounded-2xl border border-border bg-background-card/70 p-6 text-center">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-primary text-xl font-bold text-white shadow-glow">
+                3
+              </div>
+              <h3 className="mb-2 text-lg font-semibold text-white">Trade YES/NO</h3>
+              <p className="text-sm leading-relaxed text-text-secondary">
+                Buy shares based on your prediction. YES if you think it&apos;ll happen, NO if you don&apos;t. Simple as that.
+              </p>
+            </div>
+
+            {/* Step 4 */}
+            <div className="rounded-2xl border border-border bg-background-card/70 p-6 text-center">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-primary text-xl font-bold text-white shadow-glow">
+                4
+              </div>
+              <h3 className="mb-2 text-lg font-semibold text-white">Claim Winnings</h3>
+              <p className="text-sm leading-relaxed text-text-secondary">
+                When the market resolves, collect your profits instantly. 100% transparent, secured on-chain.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="px-5 py-20 sm:px-8 md:px-10">
+        <div className="mx-auto w-full max-w-[1280px]">
+          <div className="rounded-3xl border border-primary/20 bg-[radial-gradient(circle_at_top,rgba(123,115,255,0.2),transparent_55%),rgba(18,24,43,0.95)] p-8 text-center md:p-12">
+            <h2 className="mb-6 text-3xl font-bold text-white md:text-4xl">
+              Ready to turn your insights into profit?
+            </h2>
+
+            <Link href="/markets">
+              <Button size="lg" className="min-w-[260px]">
+                Connect Wallet & Start Trading
+              </Button>
+            </Link>
+
+            <div className="mt-12 flex flex-wrap items-center justify-center gap-8">
+            <div className="flex items-center gap-2 text-sm text-text-secondary">
+              <svg className="w-5 h-5 text-positive" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <span>Powered by Rain Protocol</span>
+            </div>
+            
+            <div className="flex items-center gap-2 text-sm text-text-secondary">
+              <svg className="w-5 h-5 text-positive" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <span>Secured on Arbitrum One</span>
+            </div>
+            
+            <div className="flex items-center gap-2 text-sm text-text-secondary">
+              <svg className="w-5 h-5 text-positive" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <span>Fully Decentralized</span>
+            </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-border bg-background-page-secondary px-5 py-12 sm:px-8 md:px-10">
+        <div className="mx-auto w-full max-w-[1280px]">
+          <div className="mb-8 grid grid-cols-2 gap-8 md:grid-cols-4">
+            <div>
+              <h4 className="font-semibold text-white mb-4">Platform</h4>
+              <ul className="space-y-2 text-sm text-text-secondary">
+                <li><Link href="/markets" className="hover:text-white transition-fast">Markets</Link></li>
+                <li><Link href="/portfolio" className="hover:text-white transition-fast">Portfolio</Link></li>
+                <li><Link href="/about" className="hover:text-white transition-fast">About</Link></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-white mb-4">Resources</h4>
+              <ul className="space-y-2 text-sm text-text-secondary">
+                <li><Link href="/faq" className="hover:text-white transition-fast">FAQ</Link></li>
+                <li><Link href="/docs" className="hover:text-white transition-fast">Docs</Link></li>
+                <li><Link href="/terms" className="hover:text-white transition-fast">Terms</Link></li>
+                <li><Link href="/privacy" className="hover:text-white transition-fast">Privacy</Link></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-white mb-4">Community</h4>
+              <ul className="space-y-2 text-sm text-text-secondary">
+                <li><a href="#" className="hover:text-white transition-fast">Twitter</a></li>
+                <li><a href="#" className="hover:text-white transition-fast">Discord</a></li>
+                <li><a href="#" className="hover:text-white transition-fast">Telegram</a></li>
+                <li><a href="#" className="hover:text-white transition-fast">GitHub</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-white mb-4">RainStorm</h4>
+              <p className="text-sm text-text-secondary mb-4">
+                The blockchain-native prediction market powered by Rain Protocol.
+              </p>
+            </div>
+          </div>
+
+          <div className="border-t border-border pt-8">
+            <p className="text-center text-sm text-text-secondary">
+              © 2026 RainStorm. All rights reserved.
+            </p>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
