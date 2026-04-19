@@ -11,11 +11,14 @@ import { Market } from '@/types/market';
 import { formatCurrency, formatDate, formatTimeRemaining, getStatusColor, formatPercentage, formatAddress } from '@/lib/utils/format';
 import { cn } from '@/lib/utils/cn';
 import Link from 'next/link';
+import { useRainLive } from '@/lib/hooks/useRainLive';
 
 export default function MarketDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [market, setMarket] = useState<Market | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [liveYes, setLiveYes] = useState<number | null>(null);
+  const [liveNo, setLiveNo]   = useState<number | null>(null);
   const { address, isConnected } = useAccount();
 
   useEffect(() => {
@@ -61,15 +64,19 @@ export default function MarketDetailPage({ params }: { params: Promise<{ id: str
 
   const statusColors = getStatusColor(market.status);
 
-  // Mock activity data
-  const recentActivity = [
-    { address: '0x1a2b3c4d', action: 'bought', shares: 150, position: 'yes', time: '2m ago' },
-    { address: '0x5e6f7g8h', action: 'sold', shares: 200, position: 'no', time: '5m ago' },
-    { address: '0x9i0j1k2l', action: 'bought', shares: 75, position: 'yes', time: '12m ago' },
-    { address: '0x3m4n5o6p', action: 'bought', shares: 300, position: 'no', time: '18m ago' },
-    { address: '0x7q8r9s0t', action: 'sold', shares: 125, position: 'yes', time: '25m ago' },
-    { address: '0xabcdef12', action: 'bought', shares: 180, position: 'no', time: '32m ago' },
-  ];
+  // Live WebSocket data
+  const { trades: liveTrades, connected: liveConnected, lastTradeAt } = useRainLive({ marketId: id });
+
+  // Refresh prices from API after each new trade
+  useEffect(() => {
+    if (!lastTradeAt || !id) return;
+    fetchMarketByIdFromApi(id).then((fresh) => {
+      if (fresh) { setLiveYes(fresh.yesPrice); setLiveNo(fresh.noPrice); }
+    }).catch(() => {});
+  }, [lastTradeAt, id]);
+
+  const displayYes = liveYes ?? market?.yesPrice ?? 50;
+  const displayNo  = liveNo  ?? market?.noPrice  ?? 50;
 
   return (
     <div className="min-h-screen bg-background-page">
@@ -146,11 +153,11 @@ export default function MarketDetailPage({ params }: { params: Promise<{ id: str
               <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-border">
                 <div>
                   <div className="text-xs text-text-secondary mb-1">YES</div>
-                  <div className="text-2xl font-bold text-positive">{formatPercentage(market.yesPrice)}</div>
+                  <div className="text-2xl font-bold text-positive transition-all">{formatPercentage(displayYes)}</div>
                 </div>
                 <div>
                   <div className="text-xs text-text-secondary mb-1">NO</div>
-                  <div className="text-2xl font-bold text-negative">{formatPercentage(market.noPrice)}</div>
+                  <div className="text-2xl font-bold text-negative transition-all">{formatPercentage(displayNo)}</div>
                 </div>
                 <div>
                   <div className="text-xs text-text-secondary mb-1">24h Change</div>
@@ -199,28 +206,60 @@ export default function MarketDetailPage({ params }: { params: Promise<{ id: str
               </div>
             </div>
 
-            {/* Recent Activity */}
+            {/* Live Activity Feed */}
             <div className="bg-background-card border border-border rounded-xl p-6">
-              <h2 className="text-lg font-semibold text-white mb-4">Recent Activity</h2>
-              <div className="space-y-3">
-                {recentActivity.map((activity, idx) => (
-                  <div key={idx} className="flex items-center justify-between py-3 border-b border-border last:border-0">
-                    <div className="flex items-center gap-3">
-                      <div className={cn(
-                        'w-2 h-2 rounded-full',
-                        activity.position === 'yes' ? 'bg-positive' : 'bg-negative'
-                      )} />
-                      <span className="text-sm text-text-secondary">
-                        <span className="text-white font-medium">{formatAddress(activity.address)}</span>
-                        {' '}{activity.action}{' '}
-                        <span className="text-white font-medium">{activity.shares}</span>
-                        {' '}{activity.position.toUpperCase()} shares
-                      </span>
-                    </div>
-                    <span className="text-xs text-text-tertiary">{activity.time}</span>
-                  </div>
-                ))}
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-white">Live Activity</h2>
+                <div className="flex items-center gap-2">
+                  <span className={cn(
+                    'w-2 h-2 rounded-full',
+                    liveConnected ? 'bg-positive animate-pulse' : 'bg-text-tertiary'
+                  )} />
+                  <span className="text-xs text-text-tertiary font-mono">
+                    {liveConnected ? 'LIVE' : 'connecting…'}
+                  </span>
+                </div>
               </div>
+
+              {liveTrades.length === 0 ? (
+                <div className="py-8 text-center text-text-tertiary text-sm">
+                  <div className="w-8 h-8 border-2 border-text-tertiary/30 border-t-primary rounded-full animate-spin mx-auto mb-3" />
+                  Waiting for trades…
+                </div>
+              ) : (
+                <div className="space-y-0">
+                  {liveTrades.map((trade) => {
+                    const isYes = trade.choiceIndex === 0;
+                    return (
+                      <div
+                        key={trade.id}
+                        className="flex items-center justify-between py-3 border-b border-border last:border-0 animate-fade-in"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={cn(
+                            'w-2 h-2 rounded-full flex-shrink-0',
+                            isYes ? 'bg-positive' : 'bg-negative'
+                          )} />
+                          <span className="text-sm text-text-secondary">
+                            <span className={cn('font-semibold', isYes ? 'text-positive' : 'text-negative')}>
+                              {trade.optionName.toUpperCase()}
+                            </span>
+                            {' '}
+                            <span className="text-text-tertiary text-xs">{trade.type}</span>
+                            {' '}
+                            <span className="text-white font-medium">
+                              {formatCurrency(trade.amountUsdt)} USDT
+                            </span>
+                          </span>
+                        </div>
+                        <span className="text-xs text-text-tertiary font-mono">
+                          {trade.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
 
@@ -229,8 +268,8 @@ export default function MarketDetailPage({ params }: { params: Promise<{ id: str
             <div className="sticky top-24">
               <TradeWidget
                 marketId={market.id}
-                yesPrice={market.yesPrice}
-                noPrice={market.noPrice}
+                yesPrice={displayYes}
+                noPrice={displayNo}
                 isConnected={isConnected}
                 walletAddress={address}
                 onTrade={async (action, position, amount) => {
