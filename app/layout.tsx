@@ -1,12 +1,6 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { WalletProvider } from "@/components/providers/WalletProvider";
-
-const inter = Inter({ 
-  subsets: ["latin"],
-  variable: '--font-inter',
-});
 
 export const metadata: Metadata = {
   title: "XRain - Turn Predictions Into Profits",
@@ -25,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en">
       <body className="antialiased">
         <WalletProvider>
           {children}

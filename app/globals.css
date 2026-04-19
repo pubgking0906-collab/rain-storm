@@ -1,131 +1,182 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+/* Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
 @config '../tailwind.config.ts';
 @import 'tailwindcss';
 
+/* ============================================================
+   DESIGN TOKENS — mirrors xrain-dev/css/tokens.css
+   ============================================================ */
 :root {
-  --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro', 'Segoe UI', sans-serif;
+  /* Backgrounds */
+  --bg:        #0A0B0D;
+  --bg-2:      #0E1014;
+  --surface:   #14171D;
+  --surface-2: #1A1E26;
+
+  /* Borders */
+  --line:   #23272F;
+  --line-2: #2D3240;
+
+  /* Text */
+  --text:  #E8EAED;
+  --muted: #9AA3B5;
+  --dim:   #6B7180;
+
+  /* Brand */
+  --cyan:      #4FE3F0;
+  --cyan-glow: #4FE3F033;
+  --violet:    #9A7BFF;
+
+  /* Semantic */
+  --yes:   #2ED891;
+  --no:    #FF5872;
+  --amber: #FFB347;
+
+  /* Typography */
+  --font-display: 'Instrument Serif', Georgia, serif;
+  --font-body:    'DM Sans', system-ui, -apple-system, sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+
+  /* Layout */
+  --container-max: 1400px;
+  --container-pad: 28px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+
+  /* Motion */
+  --ease:   cubic-bezier(0.2, 0.8, 0.2, 1);
+  --t-fast: .15s;
+  --t-med:  .2s;
+  --t-slow: .3s;
 }
 
+/* ============================================================
+   RESET
+   Inside @layer base so Tailwind utilities still win.
+   ============================================================ */
 @layer base {
   * {
     box-sizing: border-box;
-    padding: 0;
     margin: 0;
+    padding: 0;
   }
 }
 
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-  font-family: var(--font-inter);
-  background-color: #0B0F1A;
-  background-image: radial-gradient(circle at 12% 0%, rgba(123, 115, 255, 0.16), transparent 40%);
-  color: #FFFFFF;
+/* ============================================================
+   GLOBAL STYLES
+   ============================================================ */
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "ss01", "ss02";
+  overflow-x: hidden;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+a  { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; }
+
+/* ============================================================
+   AMBIENT BACKGROUNDS
+   Fixed layers behind all content.
+   ============================================================ */
+
+/* Soft color mesh */
+.rain-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: .15;
+  background:
+    radial-gradient(1200px 600px at 20% -10%, #4FE3F022, transparent 60%),
+    radial-gradient(900px 500px at 85% 10%,  #9A7BFF15, transparent 60%),
+    radial-gradient(800px 400px at 50% 110%, #2ED89115, transparent 60%);
 }
 
-button {
-  font-family: inherit;
+/* Subtle grid lines */
+.grid-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, #000 30%, transparent 70%);
+  opacity: .25;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* Rain drops */
+.rain-drops {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
 }
 
-::-webkit-scrollbar-track {
-  background: #0F1424;
+.rain-drops span {
+  position: absolute;
+  top: -20px;
+  width: 1px;
+  height: 60px;
+  background: linear-gradient(to bottom, transparent, var(--cyan));
+  animation: fall linear infinite;
+  opacity: .4;
 }
 
-::-webkit-scrollbar-thumb {
-  background: #4B5563;
-  border-radius: 4px;
-}
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #6B7280;
-}
+/* ============================================================
+   TYPOGRAPHY UTILITIES
+   ============================================================ */
+.serif { font-family: var(--font-display); font-weight: 400; letter-spacing: -0.01em; }
+.mono  { font-family: var(--font-mono); letter-spacing: -0.02em; }
 
-/* Smooth transitions */
-@layer utilities {
-  .transition-smooth {
-    transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  
-  .transition-fast {
-    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  }
-}
-
-/* Focus styles */
-@layer base {
-  *:focus-visible {
-    outline: 2px solid rgba(123, 115, 255, 0.6);
-    outline-offset: 2px;
-  }
-}
-
-/* Gradient text utility */
+/* Gradient text — now cyan */
 .text-gradient {
-  background: linear-gradient(135deg, #6C63FF, #8A7CFF);
+  background: linear-gradient(135deg, var(--cyan), var(--violet));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-::selection {
-  background: rgba(123, 115, 255, 0.35);
-  color: #FFFFFF;
-}
+/* ============================================================
+   SELECTION & FOCUS
+   ============================================================ */
+::selection { background: #4FE3F033; color: var(--text); }
 
-/* Animation utilities */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
+@layer base {
+  *:focus-visible {
+    outline: 2px solid #4FE3F066;
+    outline-offset: 2px;
   }
 }
 
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+@keyframes fall    { to { transform: translateY(120vh); } }
+@keyframes pulse   { 50% { opacity: .4; } }
+@keyframes scroll  { to { transform: translateX(-50%); } }
+@keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fade-in {
-  animation: fadeIn 300ms ease-out;
-}
-
-.animate-slide-down {
-  animation: slideDown 300ms ease-out;
-}
-
-.animate-slide-up {
-  animation: slideUp 300ms ease-out;
+@layer utilities {
+  .transition-smooth { transition: all 200ms var(--ease); }
+  .transition-fast   { transition: all 150ms var(--ease); }
+  .animate-fade-in   { animation: fadeIn 300ms ease-out; }
+  .animate-slide-up  { animation: slideUp 300ms ease-out; }
 }
