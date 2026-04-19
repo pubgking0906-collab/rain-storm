@@ -31,98 +31,58 @@ export default function HomePage() {
       <Header />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden px-5 pb-20 pt-16 sm:px-8 md:px-10 md:pb-24 md:pt-20">
+      <section className="relative overflow-hidden px-5 pb-20 pt-20 sm:px-8 md:px-10 md:pb-28 md:pt-28">
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-primary/10 via-primary/5 to-transparent" />
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(75%_55%_at_18%_18%,rgba(123,115,255,0.25),transparent_70%),radial-gradient(55%_40%_at_82%_28%,rgba(22,199,132,0.08),transparent_70%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_50%_at_50%_0%,rgba(123,115,255,0.2),transparent_70%)]" />
 
-        <div className="relative mx-auto w-full max-w-[1280px]">
-          <div className="grid items-start gap-12 lg:grid-cols-[minmax(0,1fr),360px] lg:gap-10">
-            <div className="rounded-3xl border border-border bg-background-card/55 p-7 shadow-xl backdrop-blur md:p-10">
-              <span className="inline-flex items-center rounded-full border border-primary/35 bg-primary/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.22em] text-primary">
-                Rain Protocol Powered
-              </span>
-              <h1 className="mt-7 max-w-3xl text-4xl font-bold leading-[1.05] text-white sm:text-5xl md:text-6xl lg:text-[68px]">
-                Turn Predictions
-                <br />
-                Into Profits
-              </h1>
+        <div className="relative mx-auto w-full max-w-[900px] text-center">
+          <span className="inline-flex items-center rounded-full border border-primary/35 bg-primary/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.22em] text-primary">
+            Rain Protocol Powered
+          </span>
 
-              <p className="mt-7 max-w-2xl text-base leading-relaxed text-text-secondary sm:text-lg md:text-xl">
-                The blockchain-native prediction market where it pays to be right. Trade on outcomes from crypto to sports, powered by Rain Protocol.
-              </p>
+          <h1 className="mt-6 text-5xl font-bold leading-[1.05] text-white sm:text-6xl md:text-7xl lg:text-[80px]">
+            Turn Predictions
+            <br />
+            Into Profits
+          </h1>
 
-              <div className="mt-9 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
-                <Link href="/markets">
-                  <Button size="lg" className="min-w-[200px]">
-                    Start Trading
-                  </Button>
-                </Link>
-                <Link href="/about">
-                  <Button size="lg" variant="outline" className="min-w-[200px] border-primary/35 bg-background-elevated/35 hover:border-primary/55">
-                    Learn How It Works
-                  </Button>
-                </Link>
-              </div>
-            </div>
+          <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-text-secondary sm:text-lg md:text-xl">
+            The blockchain-native prediction market where it pays to be right. Trade on outcomes from crypto to sports, powered by Rain Protocol.
+          </p>
 
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-              <div className="rounded-2xl border border-border bg-background-card/85 p-6">
-                <p className="text-sm uppercase tracking-[0.2em] text-text-tertiary">Total Volume</p>
-                <p className="mt-4 text-4xl font-bold text-gradient">$2.5M</p>
-                <p className="mt-2 text-sm text-text-secondary">Flowing through live prediction markets</p>
-              </div>
-              <div className="rounded-2xl border border-border bg-background-card/85 p-6">
-                <p className="text-sm uppercase tracking-[0.2em] text-text-tertiary">Active Traders</p>
-                <p className="mt-4 text-4xl font-bold text-gradient">12.3K</p>
-                <p className="mt-2 text-sm text-text-secondary">Positioning on outcomes in real-time</p>
-              </div>
-            </div>
+          <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <Link href="/markets">
+              <Button size="lg" className="min-w-[200px]">
+                Start Trading
+              </Button>
+            </Link>
+            <Link href="/about">
+              <Button size="lg" variant="outline" className="min-w-[200px] border-primary/35 bg-background-elevated/35 hover:border-primary/55">
+                Learn How It Works
+              </Button>
+            </Link>
           </div>
-        </div>
-      </section>
 
-      {/* Platform Stats */}
-      <section className="bg-background-page-secondary px-5 py-16 sm:px-8 md:px-10 md:py-20">
-        <div className="mx-auto w-full max-w-[1280px]">
-          <h2 className="text-center text-2xl font-bold text-white md:text-3xl">
-            Join thousands of traders earning on their insights
-          </h2>
-
-          <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-2xl border border-border bg-background-card/75 p-6 text-center">
-              <div className="text-3xl font-bold text-gradient md:text-4xl">
-                $2.5M
+          {/* Inline stats below CTA */}
+          <div className="mx-auto mt-14 grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {[
+              { label: 'Total Volume', value: '$2.5M' },
+              { label: 'Active Markets', value: '234' },
+              { label: 'Total Traders', value: '12.3K' },
+              { label: 'Markets Resolved', value: '1,823' },
+            ].map((stat) => (
+              <div key={stat.label} className="rounded-2xl border border-border bg-background-card/70 px-4 py-5">
+                <div className="text-2xl font-bold text-gradient sm:text-3xl">{stat.value}</div>
+                <div className="mt-1 text-xs text-text-secondary">{stat.label}</div>
               </div>
-              <div className="mt-2 text-sm text-text-secondary">Total Volume</div>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-background-card/75 p-6 text-center">
-              <div className="text-3xl font-bold text-gradient md:text-4xl">
-                234
-              </div>
-              <div className="mt-2 text-sm text-text-secondary">Active Markets</div>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-background-card/75 p-6 text-center">
-              <div className="text-3xl font-bold text-gradient md:text-4xl">
-                12.3K
-              </div>
-              <div className="mt-2 text-sm text-text-secondary">Total Traders</div>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-background-card/75 p-6 text-center">
-              <div className="text-3xl font-bold text-gradient md:text-4xl">
-                1,823
-              </div>
-              <div className="mt-2 text-sm text-text-secondary">Markets Resolved</div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Featured Markets */}
       <section className="px-5 py-16 sm:px-8 md:px-10 md:py-20">
-        <div className="mx-auto w-full max-w-[1280px]">
+        <div className="mx-auto w-full max-w-[1200px]">
           <div className="mb-8 flex items-end justify-between gap-4">
             <h2 className="text-2xl font-bold text-white md:text-3xl">
               Featured Markets
@@ -144,7 +104,7 @@ export default function HomePage() {
 
       {/* How It Works */}
       <section className="bg-background-page-secondary px-5 py-16 sm:px-8 md:px-10 md:py-20">
-        <div className="mx-auto w-full max-w-[1280px]">
+        <div className="mx-auto w-full max-w-[1200px]">
           <h2 className="mb-3 text-center text-2xl font-bold text-white md:text-3xl">
             How Prediction Markets Work
           </h2>
@@ -202,7 +162,7 @@ export default function HomePage() {
 
       {/* Final CTA */}
       <section className="px-5 py-20 sm:px-8 md:px-10">
-        <div className="mx-auto w-full max-w-[1280px]">
+        <div className="mx-auto w-full max-w-[1200px]">
           <div className="rounded-3xl border border-primary/20 bg-[radial-gradient(circle_at_top,rgba(123,115,255,0.2),transparent_55%),rgba(18,24,43,0.95)] p-8 text-center md:p-12">
             <h2 className="mb-6 text-3xl font-bold text-white md:text-4xl">
               Ready to turn your insights into profit?
@@ -242,7 +202,7 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="border-t border-border bg-background-page-secondary px-5 py-12 sm:px-8 md:px-10">
-        <div className="mx-auto w-full max-w-[1280px]">
+        <div className="mx-auto w-full max-w-[1200px]">
           <div className="mb-8 grid grid-cols-2 gap-8 md:grid-cols-4">
             <div>
               <h4 className="font-semibold text-white mb-4">Platform</h4>
