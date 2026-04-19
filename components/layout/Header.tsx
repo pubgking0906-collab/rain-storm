@@ -61,9 +61,9 @@ export function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-fast">
             <div className="w-9 h-9 rounded-lg bg-gradient-primary flex items-center justify-center">
-              <span className="text-white font-bold text-lg">R</span>
+              <span className="text-white font-bold text-lg">X</span>
             </div>
-            <span className="text-xl font-bold text-white hidden sm:block">RainStorm</span>
+            <span className="text-xl font-bold text-white hidden sm:block">XRain</span>
           </Link>
 
           {/* Desktop Navigation */}
