@@ -10,8 +10,8 @@
   },
   "dependencies": {
     "@buidlrrr/rain-sdk": "^1.1.3",
-    "@reown/appkit": "^1.8.19",
-    "@reown/appkit-adapter-wagmi": "^1.8.19",
+    "@reown/appkit": "^1.8.20-wc-reconnect-fix.0",
+    "@reown/appkit-adapter-wagmi": "^1.8.20-wc-reconnect-fix.0",
     "@tanstack/react-query": "^5.99.0",
     "accounts": "^0.6.7",
     "clsx": "^2.1.1",
@@ -20,8 +20,8 @@
     "react-dom": "19.2.4",
     "recharts": "^3.8.1",
     "tailwind-merge": "^3.5.0",
-    "viem": "^2.48.0",
-    "wagmi": "^3.6.2",
+    "viem": "^2.48.1",
+    "wagmi": "^3.6.3",
     "zustand": "^5.0.12"
   },
   "devDependencies": {
