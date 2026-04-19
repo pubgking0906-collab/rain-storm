@@ -31,7 +31,7 @@ export default function HomePage() {
       <Header />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden px-6 pb-20 pt-20 md:px-12 md:pb-28 md:pt-28">
+      <section className="relative overflow-hidden" style={{ padding: '80px 10% 100px' }}>
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-primary/10 via-primary/5 to-transparent" />
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_50%_at_50%_0%,rgba(123,115,255,0.2),transparent_70%)]" />
 
@@ -80,7 +80,7 @@ export default function HomePage() {
       </section>
 
       {/* Featured Markets */}
-      <section className="px-6 py-16 md:px-12 md:py-20">
+      <section style={{ padding: '64px 10%' }}>
         <div className="mb-8 flex items-end justify-between gap-4">
           <h2 className="text-2xl font-bold text-white md:text-3xl">
             Featured Markets
@@ -100,7 +100,7 @@ export default function HomePage() {
       </section>
 
       {/* How It Works */}
-      <section className="bg-background-page-secondary px-6 py-16 md:px-12 md:py-20">
+      <section className="bg-background-page-secondary" style={{ padding: '64px 10%' }}>
         <h2 className="mb-3 text-center text-2xl font-bold text-white md:text-3xl">
           How Prediction Markets Work
         </h2>
@@ -127,7 +127,7 @@ export default function HomePage() {
       </section>
 
       {/* Final CTA */}
-      <section className="px-6 py-20 md:px-12">
+      <section style={{ padding: '80px 10%' }}>
         <div className="rounded-3xl border border-primary/20 bg-[radial-gradient(circle_at_top,rgba(123,115,255,0.2),transparent_55%),rgba(18,24,43,0.95)] p-8 text-center md:p-12">
           <h2 className="mb-6 text-3xl font-bold text-white md:text-4xl">
             Ready to turn your insights into profit?
@@ -151,7 +151,7 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border bg-background-page-secondary px-6 py-12 md:px-12">
+      <footer className="border-t border-border bg-background-page-secondary" style={{ padding: '48px 10%' }}>
         <div className="mb-8 grid grid-cols-2 gap-8 md:grid-cols-4">
           <div>
             <h4 className="mb-4 font-semibold text-white">Platform</h4>
