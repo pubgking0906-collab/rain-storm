@@ -3,11 +3,36 @@ import { Market, MarketCategory, MarketStatus } from '@/types/market';
 
 type RainEnvironment = 'development' | 'stage' | 'production';
 
+// Raw pool shape returned by the Rain API (not the typed SDK wrapper)
+type RawPool = {
+  id?: string;
+  _id?: string;
+  title?: string;
+  question?: string;          // API sometimes uses this instead of title
+  name?: string;
+  description?: string;
+  status?: string;
+  totalVolume?: string;
+  contractAddress?: string;
+  endTime?: string | number | bigint;
+  startTime?: string | number | bigint;
+  options?: Array<{
+    choiceIndex?: number;
+    optionName?: string;
+    currentPrice?: string | number | bigint;
+    totalFunds?: string | number | bigint;
+  }>;
+  choices?: Array<{
+    choiceIndex?: number;
+    optionName?: string;
+    currentPrice?: string | number | bigint;
+  }>;
+  [key: string]: unknown;
+};
+
 function getEnvironment(): RainEnvironment {
   const env = process.env.RAIN_ENVIRONMENT ?? process.env.NEXT_PUBLIC_RAIN_ENVIRONMENT ?? 'production';
-  if (env === 'development' || env === 'stage' || env === 'production') {
-    return env;
-  }
+  if (env === 'development' || env === 'stage' || env === 'production') return env as RainEnvironment;
   return 'production';
 }
 
@@ -16,77 +41,110 @@ function getRainClient(): Rain {
 }
 
 function inferCategory(title: string): MarketCategory {
-  const normalized = title.toLowerCase();
-  if (normalized.includes('bitcoin') || normalized.includes('ethereum') || normalized.includes('crypto')) return 'crypto';
-  if (normalized.includes('nba') || normalized.includes('formula') || normalized.includes('championship')) return 'sports';
-  if (normalized.includes('federal reserve') || normalized.includes('election') || normalized.includes('government')) return 'politics';
-  if (normalized.includes('market cap') || normalized.includes('sales') || normalized.includes('etf')) return 'finance';
-  if (normalized.includes('apple') || normalized.includes('ai') || normalized.includes('chatgpt')) return 'science-tech';
+  const t = title.toLowerCase();
+  if (t.includes('bitcoin') || t.includes('ethereum') || t.includes('crypto') || t.includes('btc') || t.includes('eth') || t.includes('sol')) return 'crypto';
+  if (t.includes('nba') || t.includes('nfl') || t.includes('mlb') || t.includes('formula') || t.includes('championship') || t.includes('match') || t.includes('game') || t.includes('sport')) return 'sports';
+  if (t.includes('federal reserve') || t.includes('election') || t.includes('president') || t.includes('congress') || t.includes('government') || t.includes('vote')) return 'politics';
+  if (t.includes('market cap') || t.includes('sales') || t.includes('etf') || t.includes('stock') || t.includes('fed') || t.includes('rate')) return 'finance';
+  if (t.includes('apple') || t.includes('ai') || t.includes('chatgpt') || t.includes('openai') || t.includes('tech') || t.includes('launch')) return 'science-tech';
   return 'other';
 }
 
-function mapMarketStatus(status: string): MarketStatus {
-  const normalized = status.toLowerCase();
-  if (normalized.includes('live') || normalized.includes('trading') || normalized.includes('closingsoon')) return 'live';
-  if (normalized.includes('new')) return 'upcoming';
-  if (normalized.includes('closed') || normalized.includes('result') || normalized.includes('review') || normalized.includes('evaluation')) return 'resolved';
-  return 'upcoming';
+function mapRainStatus(status: string | undefined): MarketStatus {
+  if (!status) return 'live';
+  const s = status.toLowerCase();
+  if (s.includes('live') || s.includes('trading') || s.includes('closingsoon')) return 'live';
+  if (s.includes('new')) return 'upcoming';
+  if (s.includes('closed') || s.includes('result') || s.includes('review') || s.includes('evaluation') || s.includes('finalized')) return 'resolved';
+  return 'live';
 }
 
-function bigIntPriceToPercent(value: bigint): number {
-  return Number((value * BigInt(10000)) / BigInt('1000000000000000000')) / 100;
-}
-
-function bigIntTokenToNumber(value: bigint, decimals = 6): number {
-  const divisor = 10 ** decimals;
-  return Number(value) / divisor;
-}
-
-function parseVolume(totalVolume: string | undefined): number {
-  if (!totalVolume) return 0;
-  const parsed = Number(totalVolume);
-  return Number.isFinite(parsed) ? parsed : 0;
-}
-
-type RawMarketDetails = {
-  title?: string;
-  marketQuestion?: string;
-  description?: string;
-  marketDescription?: string;
-  status?: string;
-  options?: Array<{ currentPrice?: bigint; optionName?: string }>;
-  totalLiquidity?: bigint;
-  allFunds?: bigint;
-  startTime?: bigint;
-  endTime?: bigint;
-};
-
-async function mapPublicMarketToAppMarket(rain: Rain, publicMarket: { id: string; title?: string; totalVolume?: string; status?: string }): Promise<Market> {
-  let details: RawMarketDetails | null = null;
+function safeNumber(val: string | number | bigint | undefined, decimals = 18): number {
+  if (val === undefined || val === null) return 0;
   try {
-    details = (await rain.getMarketDetails(publicMarket.id)) as RawMarketDetails;
+    const n = typeof val === 'bigint' ? val : BigInt(String(val));
+    return Number((n * BigInt(10000)) / BigInt(10 ** decimals)) / 100;
   } catch {
-    details = null;
+    return 0;
+  }
+}
+
+function safeTokenAmount(val: string | number | bigint | undefined, decimals = 6): number {
+  if (val === undefined || val === null) return 0;
+  try {
+    return Number(BigInt(String(val))) / 10 ** decimals;
+  } catch {
+    return 0;
+  }
+}
+
+function parseTimestamp(val: string | number | bigint | undefined): Date {
+  if (!val) return new Date();
+  try {
+    const n = Number(typeof val === 'bigint' ? val : BigInt(String(val)));
+    // seconds vs milliseconds heuristic
+    return new Date(n > 1e12 ? n : n * 1000);
+  } catch {
+    return new Date();
+  }
+}
+
+function extractTitle(raw: RawPool): string {
+  return String(raw.title ?? raw.question ?? raw.name ?? '').trim() || 'Untitled Market';
+}
+
+function mapRawPool(raw: RawPool, fallbackId?: string): Market {
+  const id = String(raw.id ?? raw._id ?? fallbackId ?? '');
+  const title = extractTitle(raw);
+  const opts = raw.options ?? raw.choices ?? [];
+
+  // Price comes from the chain-enriched currentPrice (bigint-like string).
+  // The API also stores an initial price — use whichever is present.
+  let yesPrice = 50;
+  let noPrice = 50;
+
+  if (opts.length >= 2) {
+    const yRaw = opts[0]?.currentPrice;
+    const nRaw = opts[1]?.currentPrice;
+    if (yRaw !== undefined && Number(yRaw) > 0) {
+      yesPrice = safeNumber(yRaw);
+      noPrice  = safeNumber(nRaw ?? String(BigInt('1000000000000000000') - BigInt(String(yRaw))));
+    }
+  } else if (opts.length === 1) {
+    const yRaw = opts[0]?.currentPrice;
+    if (yRaw !== undefined && Number(yRaw) > 0) {
+      yesPrice = safeNumber(yRaw);
+      noPrice  = 100 - yesPrice;
+    }
   }
 
-  const options = details?.options ?? [];
-  const yesPrice = options[0]?.currentPrice ? bigIntPriceToPercent(options[0].currentPrice) : 50;
-  const noPrice = options[1]?.currentPrice ? bigIntPriceToPercent(options[1].currentPrice) : Math.max(0, 100 - yesPrice);
-  const createdAt = details?.startTime ? new Date(Number(details.startTime) * 1000) : new Date();
-  const closesAt = details?.endTime ? new Date(Number(details.endTime) * 1000) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-  const title = details?.title ?? details?.marketQuestion ?? publicMarket.title ?? 'Untitled Market';
-  const description = details?.description ?? details?.marketDescription ?? 'Live prediction market powered by Rain Protocol.';
+  const liquidity = safeTokenAmount(
+    raw.options?.[0]?.totalFunds ?? undefined
+  );
+
+  const volume = (() => {
+    const v = Number(raw.totalVolume ?? 0);
+    return Number.isFinite(v) ? v : 0;
+  })();
+
+  const closesAt = raw.endTime
+    ? parseTimestamp(raw.endTime as string | number | bigint)
+    : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+  const createdAt = raw.startTime
+    ? parseTimestamp(raw.startTime as string | number | bigint)
+    : new Date();
 
   return {
-    id: publicMarket.id,
+    id,
     title,
-    description,
+    description: String(raw.description ?? 'Live prediction market powered by Rain Protocol.'),
     category: inferCategory(title),
-    status: mapMarketStatus(details?.status ?? publicMarket.status ?? 'Live'),
+    status: mapRainStatus(String(raw.status ?? 'Live')),
     yesPrice,
     noPrice,
-    liquidity: bigIntTokenToNumber(details?.totalLiquidity ?? details?.allFunds ?? BigInt(0)),
-    volume: parseVolume(publicMarket.totalVolume),
+    liquidity,
+    volume,
     totalTraders: 0,
     createdAt,
     closesAt,
@@ -96,34 +154,36 @@ async function mapPublicMarketToAppMarket(rain: Rain, publicMarket: { id: string
 
 export async function fetchRainMarkets(limit = 24, offset = 0): Promise<Market[]> {
   const rain = getRainClient();
+
+  // Step 1: get the public market list (API call — fast)
   const publicMarkets = await rain.getPublicMarkets({ limit, offset, sortBy: 'Liquidity', status: 'Live' });
-  return Promise.all(publicMarkets.map((market) => mapPublicMarketToAppMarket(rain, market)));
+
+  // Step 2: enrich each with full API data via getMarketById (API call, no RPC)
+  const settled = await Promise.allSettled(
+    publicMarkets.map(async (m) => {
+      try {
+        const full = await rain.getMarketById({ marketId: m.id }) as unknown as RawPool;
+        // getMarketById returns the raw API object; merge with public market's totalVolume
+        const merged: RawPool = { ...full, totalVolume: m.totalVolume ?? full.totalVolume };
+        return mapRawPool(merged, m.id);
+      } catch {
+        // Fallback: use what we got from the public list
+        const raw = m as unknown as RawPool;
+        return mapRawPool({ ...raw, totalVolume: m.totalVolume }, m.id);
+      }
+    })
+  );
+
+  return settled
+    .filter((r): r is PromiseFulfilledResult<Market> => r.status === 'fulfilled')
+    .map((r) => r.value);
 }
 
 export async function fetchRainMarketById(marketId: string): Promise<Market | null> {
   const rain = getRainClient();
   try {
-    const details = (await rain.getMarketDetails(marketId)) as RawMarketDetails;
-    const options = details.options ?? [];
-    const yesPrice = options[0]?.currentPrice ? bigIntPriceToPercent(options[0].currentPrice) : 50;
-    const noPrice = options[1]?.currentPrice ? bigIntPriceToPercent(options[1].currentPrice) : Math.max(0, 100 - yesPrice);
-    const title = details.title ?? details.marketQuestion ?? 'Untitled Market';
-
-    return {
-      id: marketId,
-      title,
-      description: details.description ?? details.marketDescription ?? 'Live prediction market powered by Rain Protocol.',
-      category: inferCategory(title),
-      status: mapMarketStatus(details.status ?? 'Live'),
-      yesPrice,
-      noPrice,
-      liquidity: bigIntTokenToNumber(details.totalLiquidity ?? details.allFunds ?? BigInt(0)),
-      volume: 0,
-      totalTraders: 0,
-      createdAt: details.startTime ? new Date(Number(details.startTime) * 1000) : new Date(),
-      closesAt: details.endTime ? new Date(Number(details.endTime) * 1000) : new Date(),
-      resolutionCriteria: 'Resolved according to official market outcome rules on Rain Protocol.',
-    };
+    const raw = await rain.getMarketById({ marketId }) as unknown as RawPool;
+    return mapRawPool(raw, marketId);
   } catch {
     return null;
   }
