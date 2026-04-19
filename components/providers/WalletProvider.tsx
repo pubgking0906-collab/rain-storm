@@ -15,10 +15,10 @@ createAppKit({
   networks: [arbitrum],
   defaultNetwork: arbitrum,
   metadata: {
-    name: 'RainStorm',
+    name: 'XRain',
     description: 'The blockchain-native prediction market powered by Rain Protocol',
-    url: typeof window !== 'undefined' ? window.location.origin : 'https://rainstorm.app',
-    icons: ['/favicon.ico'],
+    url: 'https://xrain.ai',
+    icons: ['https://xrain.ai/favicon.ico'],
   },
   features: {
     analytics: false,
