@@ -59,11 +59,11 @@ export function Header() {
       <div style={{ padding: '0 10%' }}>
         <div className="flex items-center justify-between h-16 md:h-[4.5rem]">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-fast">
-            <div className="w-9 h-9 rounded-lg bg-gradient-primary flex items-center justify-center">
+          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-fast">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-md">
               <span className="text-white font-bold text-lg">X</span>
             </div>
-            <span className="text-xl font-bold text-white hidden sm:block">XRain</span>
+            <span className="text-xl font-bold text-white hidden sm:block">Rain</span>
           </Link>
 
           {/* Desktop Navigation */}
