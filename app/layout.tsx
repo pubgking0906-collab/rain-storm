@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { WalletProvider } from "@/components/providers/WalletProvider";
+import { ClientProviders } from "@/components/providers/ClientProviders";
 
 export const metadata: Metadata = {
   title: "XRain - Turn Predictions Into Profits",
@@ -21,9 +21,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        <WalletProvider>
+        <ClientProviders>
           {children}
-        </WalletProvider>
+        </ClientProviders>
       </body>
     </html>
   );

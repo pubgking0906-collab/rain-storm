@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useAppKit } from '@reown/appkit/react';
+import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { useAccount, useDisconnect, useReadContract } from 'wagmi';
 import { cn } from '@/lib/utils/cn';
 import { formatAddress } from '@/lib/utils/format';
@@ -19,7 +19,7 @@ export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const { open } = useAppKit();
+  const { openConnectModal } = useConnectModal();
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
   const { data: rawBalance } = useReadContract({
@@ -87,7 +87,7 @@ export function Header() {
           {/* Wallet Section */}
           <div className="flex items-center gap-3">
             {!isConnected ? (
-              <Button onClick={() => open()} size="md">
+              <Button onClick={() => openConnectModal?.()} size="md">
                 Connect Wallet
               </Button>
             ) : (
@@ -209,7 +209,7 @@ export function Header() {
             ))}
             {!isConnected && (
               <button
-                onClick={() => { open(); setIsMenuOpen(false); }}
+                onClick={() => { openConnectModal?.(); setIsMenuOpen(false); }}
                 className="w-full mt-2 px-4 py-3 bg-gradient-primary rounded-xl text-white text-sm font-semibold"
               >
                 Connect Wallet
