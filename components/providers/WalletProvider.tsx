@@ -20,7 +20,6 @@ export function WalletProvider({ children }: { children: ReactNode }) {
             borderRadius: 'medium',
             fontStack: 'system',
           })}
-          locale="en-US"
         >
           {children}
         </RainbowKitProvider>
