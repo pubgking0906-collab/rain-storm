@@ -4,9 +4,10 @@ import { injected, walletConnect } from 'wagmi/connectors';
 
 const projectId = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID!;
 
+// showQrModal: false — we render our own QR code from the URI event
 export const wcConnector = walletConnect({
   projectId,
-  showQrModal: true,
+  showQrModal: false,
   metadata: {
     name: 'XRain',
     description: 'Prediction markets on Arbitrum',
