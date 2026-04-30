@@ -63,39 +63,26 @@ export function ConnectModal({ isOpen, onClose }: ConnectModalProps) {
             </svg>
           </button>
 
-          {/* MetaMask extension — only if detected */}
-          {hasInjected ? (
-            <button
-              onClick={() => connect({ connector: injected() })}
-              disabled={isPending}
-              className="w-full flex items-center gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all disabled:opacity-50"
-            >
-              <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" className="w-10 h-10" alt="MetaMask" />
-              <div className="text-left">
-                <div className="text-white font-semibold">MetaMask</div>
-                <div className="text-white/50 text-xs">Browser extension</div>
+          {/* MetaMask */}
+          <button
+            onClick={() => hasInjected
+              ? connect({ connector: injected() })
+              : connect({ connector: walletConnect({ projectId, showQrModal: true }) })
+            }
+            disabled={isPending}
+            className="w-full flex items-center gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all disabled:opacity-50"
+          >
+            <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" className="w-10 h-10" alt="MetaMask" />
+            <div className="text-left">
+              <div className="text-white font-semibold">MetaMask</div>
+              <div className="text-white/50 text-xs">
+                {hasInjected ? 'Browser extension' : 'Scan QR with MetaMask app'}
               </div>
-              <svg className="w-4 h-4 text-white/30 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          ) : (
-            <a
-              href="https://metamask.app.link/dapp/xrain.ai"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10 transition-all"
-            >
-              <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" className="w-10 h-10" alt="MetaMask" />
-              <div className="text-left">
-                <div className="text-white font-semibold">MetaMask Mobile</div>
-                <div className="text-white/40 text-xs">Open in MetaMask app browser</div>
-              </div>
-              <svg className="w-4 h-4 text-white/30 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-            </a>
-          )}
+            </div>
+            <svg className="w-4 h-4 text-white/30 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
         </div>
 
         {isPending && (
