@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useConnect, useAccount } from 'wagmi';
-import { injected, walletConnect } from 'wagmi/connectors';
+import { wcConnector, injectedConnector } from '@/lib/wallet/config';
 import { cn } from '@/lib/utils/cn';
 
 interface ConnectModalProps {
@@ -14,9 +14,7 @@ export function ConnectModal({ isOpen, onClose }: ConnectModalProps) {
   const { connect, isPending, error, reset } = useConnect();
   const { isConnected } = useAccount();
   const [hasInjected, setHasInjected] = useState(false);
-  const projectId = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID!;
 
-  // Detect MetaMask / injected provider client-side only
   useEffect(() => {
     setHasInjected(typeof window !== 'undefined' && !!(window as any).ethereum);
   }, []);
@@ -43,9 +41,9 @@ export function ConnectModal({ isOpen, onClose }: ConnectModalProps) {
         </div>
 
         <div className="space-y-3">
-          {/* WalletConnect — primary for mobile */}
+          {/* WalletConnect — QR code */}
           <button
-            onClick={() => connect({ connector: walletConnect({ projectId, showQrModal: true }) })}
+            onClick={() => connect({ connector: wcConnector })}
             disabled={isPending}
             className="w-full flex items-center gap-4 p-4 rounded-xl bg-[#3B99FC]/10 hover:bg-[#3B99FC]/20 border border-[#3B99FC]/30 hover:border-[#3B99FC]/50 transition-all disabled:opacity-50"
           >
@@ -65,10 +63,7 @@ export function ConnectModal({ isOpen, onClose }: ConnectModalProps) {
 
           {/* MetaMask */}
           <button
-            onClick={() => hasInjected
-              ? connect({ connector: injected() })
-              : connect({ connector: walletConnect({ projectId, showQrModal: true }) })
-            }
+            onClick={() => connect({ connector: hasInjected ? injectedConnector : wcConnector })}
             disabled={isPending}
             className="w-full flex items-center gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all disabled:opacity-50"
           >
@@ -88,7 +83,7 @@ export function ConnectModal({ isOpen, onClose }: ConnectModalProps) {
         {isPending && (
           <div className="mt-4 text-center text-white/50 text-sm flex items-center justify-center gap-2">
             <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-            Connecting…
+            Opening QR code…
           </div>
         )}
 
