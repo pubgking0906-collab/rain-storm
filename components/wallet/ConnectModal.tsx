@@ -1,58 +1,114 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useConnect, useAccount, useConfig } from 'wagmi';
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { useConnect, useAccount, useDisconnect } from 'wagmi';
 import { QRCodeSVG } from 'qrcode.react';
-import { wcConnector, injectedConnector } from '@/lib/wallet/config';
+import { injectedConnector } from '@/lib/wallet/config';
+
+const PROJECT_ID = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID!;
 
 interface ConnectModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+type View = 'menu' | 'qr';
+
 export function ConnectModal({ isOpen, onClose }: ConnectModalProps) {
-  const { connect, isPending, error, reset } = useConnect();
+  const { connect } = useConnect();
   const { isConnected } = useAccount();
-  const config = useConfig();
   const [hasInjected, setHasInjected] = useState(false);
   const [wcUri, setWcUri] = useState<string | null>(null);
-  const [view, setView] = useState<'menu' | 'qr'>('menu');
+  const [view, setView] = useState<View>('menu');
+  const [wcLoading, setWcLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const wcProviderRef = useRef<any>(null);
 
   useEffect(() => {
     setHasInjected(typeof window !== 'undefined' && !!(window as any).ethereum);
   }, []);
 
-  // Listen for WalletConnect URI from wagmi connector
   useEffect(() => {
-    const connector = config.connectors.find(c => c.id === 'walletConnect');
-    if (!connector) return;
-
-    const handler = ({ type, data }: { type: string; data?: unknown }) => {
-      if (type === 'display_uri' && typeof data === 'string') {
-        setWcUri(data);
-        setView('qr');
-      }
-    };
-
-    connector.emitter.on('message', handler);
-    return () => { connector.emitter.off('message', handler); };
-  }, [config]);
-
-  useEffect(() => {
-    if (isConnected) { setWcUri(null); setView('menu'); onClose(); }
+    if (isConnected) {
+      setWcUri(null);
+      setView('menu');
+      onClose();
+    }
   }, [isConnected, onClose]);
 
+  // Clean up WC provider when modal closes
+  useEffect(() => {
+    if (!isOpen && wcProviderRef.current) {
+      wcProviderRef.current.disconnect?.().catch(() => {});
+      wcProviderRef.current = null;
+      setWcUri(null);
+      setWcLoading(false);
+    }
+  }, [isOpen]);
+
   const handleClose = () => {
-    reset();
-    setWcUri(null);
+    setError(null);
     setView('menu');
     onClose();
   };
 
-  const startWalletConnect = () => {
+  const startWalletConnect = useCallback(async () => {
     setView('qr');
-    connect({ connector: wcConnector });
-  };
+    setWcUri(null);
+    setWcLoading(true);
+    setError(null);
+
+    try {
+      // Use @walletconnect/ethereum-provider directly — wagmi connector
+      // does not reliably emit display_uri in all environments.
+      const mod = await import('@walletconnect/ethereum-provider');
+      const EthereumProvider = (mod as any).EthereumProvider ?? (mod as any).default;
+
+      const provider = await EthereumProvider.init({
+        projectId: PROJECT_ID,
+        chains: [42161],
+        showQrModal: false,
+        metadata: {
+          name: 'XRain',
+          description: 'Prediction markets on Arbitrum',
+          url: 'https://xrain.ai',
+          icons: ['https://xrain.ai/favicon.ico'],
+        },
+      });
+
+      wcProviderRef.current = provider;
+
+      provider.on('display_uri', (uri: string) => {
+        setWcUri(uri);
+        setWcLoading(false);
+      });
+
+      provider.on('disconnect', () => {
+        wcProviderRef.current = null;
+        setWcUri(null);
+        setView('menu');
+      });
+
+      // connect() resolves once user approves in their wallet
+      provider.connect().then(() => {
+        // Inject the WC provider as window.ethereum so wagmi injected
+        // connector can pick it up transparently.
+        (window as any).ethereum = provider;
+        connect({ connector: injectedConnector });
+      }).catch((err: any) => {
+        if (err?.message?.includes('User rejected')) {
+          setError('Connection rejected by user');
+        } else if (err?.message) {
+          setError(err.message);
+        }
+        setView('menu');
+      });
+    } catch (err: any) {
+      setError(err?.message ?? 'Failed to start WalletConnect');
+      setView('menu');
+      setWcLoading(false);
+    }
+  }, [connect]);
 
   if (!isOpen) return null;
 
@@ -65,7 +121,10 @@ export function ConnectModal({ isOpen, onClose }: ConnectModalProps) {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
             {view === 'qr' && (
-              <button onClick={() => setView('menu')} className="text-white/40 hover:text-white mr-1">
+              <button
+                onClick={() => { setView('menu'); setWcUri(null); }}
+                className="text-white/40 hover:text-white mr-1"
+              >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
@@ -91,7 +150,7 @@ export function ConnectModal({ isOpen, onClose }: ConnectModalProps) {
                   <QRCodeSVG value={wcUri} size={220} />
                 </div>
                 <p className="text-white/60 text-sm text-center mb-2">
-                  Scan with MetaMask, Trust Wallet, or any WalletConnect wallet
+                  Scan with MetaMask, Trust Wallet, or any WalletConnect-compatible wallet
                 </p>
                 <button
                   onClick={() => { navigator.clipboard?.writeText(wcUri); }}
@@ -103,7 +162,7 @@ export function ConnectModal({ isOpen, onClose }: ConnectModalProps) {
             ) : (
               <div className="flex flex-col items-center py-8 gap-3">
                 <div className="w-8 h-8 border-2 border-white/20 border-t-[#3B99FC] rounded-full animate-spin" />
-                <p className="text-white/50 text-sm">Generating QR code…</p>
+                <p className="text-white/50 text-sm">Connecting to relay server…</p>
               </div>
             )}
           </div>
@@ -115,7 +174,7 @@ export function ConnectModal({ isOpen, onClose }: ConnectModalProps) {
             {/* WalletConnect */}
             <button
               onClick={startWalletConnect}
-              disabled={isPending}
+              disabled={wcLoading}
               className="w-full flex items-center gap-4 p-4 rounded-xl bg-[#3B99FC]/10 hover:bg-[#3B99FC]/20 border border-[#3B99FC]/30 hover:border-[#3B99FC]/50 transition-all disabled:opacity-50"
             >
               <div className="w-10 h-10 rounded-lg bg-[#3B99FC] flex items-center justify-center flex-shrink-0">
@@ -132,14 +191,13 @@ export function ConnectModal({ isOpen, onClose }: ConnectModalProps) {
               </svg>
             </button>
 
-            {/* MetaMask */}
+            {/* MetaMask / browser wallet */}
             <button
               onClick={() => hasInjected
                 ? connect({ connector: injectedConnector })
                 : startWalletConnect()
               }
-              disabled={isPending}
-              className="w-full flex items-center gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all disabled:opacity-50"
+              className="w-full flex items-center gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all"
             >
               <img
                 src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg"
@@ -160,7 +218,7 @@ export function ConnectModal({ isOpen, onClose }: ConnectModalProps) {
 
         {error && (
           <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-xs">
-            {error.message}
+            {error}
           </div>
         )}
       </div>
