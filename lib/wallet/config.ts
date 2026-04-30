@@ -1,36 +1,15 @@
-import {
-  connectorsForWallets,
-  getDefaultConfig,
-} from '@rainbow-me/rainbowkit';
-import {
-  metaMaskWallet,
-  walletConnectWallet,
-  coinbaseWallet,
-  rainbowWallet,
-  trustWallet,
-} from '@rainbow-me/rainbowkit/wallets';
-import { createConfig, http } from 'wagmi';
+import { http, createConfig } from 'wagmi';
 import { arbitrum } from 'wagmi/chains';
+import { injected, walletConnect } from 'wagmi/connectors';
 
 const projectId = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID!;
 
-const connectors = connectorsForWallets(
-  [
-    {
-      groupName: 'Connect with QR Code',
-      wallets: [walletConnectWallet, metaMaskWallet, trustWallet],
-    },
-    {
-      groupName: 'Browser Extension',
-      wallets: [rainbowWallet, coinbaseWallet],
-    },
-  ],
-  { appName: 'XRain', projectId }
-);
-
 export const wagmiConfig = createConfig({
-  connectors,
   chains: [arbitrum],
+  connectors: [
+    injected(),
+    walletConnect({ projectId }),
+  ],
   transports: {
     [arbitrum.id]: http('https://arb1.arbitrum.io/rpc'),
   },
