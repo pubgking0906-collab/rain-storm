@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAccount, useDisconnect } from 'wagmi';
@@ -13,9 +13,38 @@ export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isConnectOpen, setIsConnectOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [wcAddress, setWcAddress] = useState<string | null>(null);
 
-  const { address, isConnected } = useAccount();
-  const { disconnect } = useDisconnect();
+  const { address: wagmiAddress, isConnected: wagmiConnected } = useAccount();
+  const { disconnect: wagmiDisconnect } = useDisconnect();
+
+  // Pick up WalletConnect address when wagmi is not involved
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const stored = sessionStorage.getItem('wcAddress');
+    if (stored) setWcAddress(stored);
+
+    const handler = (e: Event) => {
+      const addr = (e as CustomEvent).detail?.address;
+      if (addr) setWcAddress(addr);
+    };
+    window.addEventListener('wcConnected', handler);
+    return () => window.removeEventListener('wcConnected', handler);
+  }, []);
+
+  const address = wagmiAddress ?? wcAddress ?? undefined;
+  const isConnected = wagmiConnected || !!wcAddress;
+
+  const disconnect = () => {
+    wagmiDisconnect();
+    sessionStorage.removeItem('wcAddress');
+    if (typeof window !== 'undefined') {
+      const s = (window as any).__wcSession;
+      s?.client?.disconnect?.({ topic: s.session?.topic, reason: { code: 6000, message: 'User disconnected' } }).catch(() => {});
+      (window as any).__wcSession = null;
+    }
+    setWcAddress(null);
+  };
 
   const navLinks = [
     { label: 'Markets', href: '/markets' },
@@ -82,7 +111,7 @@ export function Header() {
                         className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/8 transition-smooth text-sm text-white">
                         Portfolio
                       </Link>
-                      <button onClick={() => { disconnect(); setIsDropdownOpen(false); }}
+                      <button onClick={() => { disconnect(); setIsDropdownOpen(false); setWcAddress(null); }}
                         className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-red-500/10 transition-smooth text-sm text-red-400">
                         Disconnect
                       </button>
